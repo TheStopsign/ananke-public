@@ -1,0 +1,19 @@
+minio:
+  enabled: true
+  makeBucketJob:
+    podAnnotations:
+      linkerd.io/inject: "disabled"
+  mode: standalone
+  accessKey: grafana-tempo
+  secretKey: supersecret
+  buckets:
+    - name: tempo-traces
+      policy: none
+      purge: false
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  configPathmc: "/tmp/minio/mc/"

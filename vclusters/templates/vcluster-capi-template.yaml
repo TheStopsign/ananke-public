@@ -1,0 +1,57 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.cluster.name }}
+  annotations:
+    linkerd.io/inject: enabled
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Values.cluster.name }}
+spec:
+  controlPlaneRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    kind: VCluster
+    name: {{ .Values.cluster.name }}
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    kind: VCluster
+    name: {{ .Values.cluster.name }}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: VCluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Values.cluster.name }}
+spec:
+  controlPlaneEndpoint:
+    host: {{ .Values.cluster.name }}.ananke.com
+    port: 443
+  helmRelease:
+    chart:
+      name: null
+      repo: null
+      version: null
+    values: |
+      fallbackHostDns: true
+      syncer:
+        kubeConfigContextName: {{ .Values.cluster.name }}
+        extraArgs:
+        - --tls-san={{ .Values.cluster.name }}.ananke.com
+        - --out-kube-config-server=https://{{ .Values.cluster.name }}.ananke.com
+      coredns:
+        enabled: false
+  kubernetesVersion: 1.25.6+k3s1
+---
+apiVersion: getambassador.io/v3alpha1
+kind: Mapping
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Values.cluster.name }}
+spec:
+  hostname: {{ .Values.cluster.name }}.ananke.com
+  prefix: /
+  service: https://{{ .Values.cluster.name }}.{{ .Values.cluster.name }}:443

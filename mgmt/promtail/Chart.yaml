@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ananke-promtail
+description: Helm chart for Promtail
+type: application
+version: 1.0.0
+appVersion: "1.0"

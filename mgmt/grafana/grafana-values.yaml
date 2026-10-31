@@ -1,0 +1,190 @@
+grafana:
+  podAnnotations:
+    linkerd.io/inject: enabled
+
+  grafana.ini:
+    auth:
+      disable_login_form: true
+    auth.anonymous:
+      enabled: true
+      org_role: Editor
+    auth.basic:
+      enabled: false
+    analytics:
+      check_for_updates: false
+    log:
+      mode: console
+      level: debug
+    log.console:
+      format: text
+      level: debug
+    panels:
+      disable_sanitize_html: true
+    server:
+      root_url: "%(protocol)s://%(domain)s:/grafana/"
+      router_logging: true
+    tracing.opentelemetry.jaeger:
+      address: http://collector.linkerd-jaeger:14268/api/traces?format=jaeger.thrift
+      propagation: b3
+
+  service:
+    port: 3000
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          orgId: 1
+          uid: prometheus
+          url: http://prometheus.linkerd-viz.svc.cluster.local:9090
+          isDefault: true
+          editable: true
+          jsonData:
+            timeInterval: "5s"
+            httpMethod: GET
+        - name: Loki
+          type: loki
+          access: proxy
+          orgId: 1
+          uid: loki
+          url: http://loki-distributed-query-frontend.loki.svc.cluster.local:3100
+          isDefault: false
+          editable: true
+          jsonData:
+            maxLines: 1000
+            derivedFields:
+              - datasourceUid: tempo
+                matcherRegex: "traceID=(\\w+)"
+                name: TraceID
+                url: "$${__value.raw}" # url will be interpreted as query for the datasource
+        - name: Tempo
+          type: tempo
+          access: proxy
+          orgId: 1
+          uid: tempo
+          url: http://tempo-query-frontend.tempo.svc.cluster.local:3100
+          isDefault: false
+          editable: true
+          version: 1
+          jsonData:
+            httpMethod: GET
+            tracesToLogs:
+              datasourceUid: "loki"
+              tags: ["linkerd_io_proxy_deployment"]
+              mappedTags:
+                - key: "service.name"
+                  value: "linkerd_io_proxy_deployment"
+                # - key: "linkerd.io/proxy-deployment"
+                #   value: "linkerd_io_proxy_deployment"
+              mapTagNamesEnabled: true
+              spanStartTimeShift: "1h"
+              spanEndTimeShift: "1h"
+              filterByTraceID: false
+              filterBySpanID: false
+              lokiSearch: true
+            tracesToMetrics:
+              datasourceUid: "prometheus"
+              tags: [{ key: "service.name", value: "service" }, { key: "job" }]
+              queries:
+                - name: "Sample query"
+                  query: "sum(rate(traces_spanmetrics_latency_bucket{$__tags}[5m]))"
+            serviceMap:
+              datasourceUid: "prometheus"
+            search:
+              hide: false
+            nodeGraph:
+              enabled: true
+            lokiSearch:
+              datasourceUid: "loki"
+
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: "default"
+          orgId: 1
+          folder: ""
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+
+  dashboards:
+    default:
+      # all these charts are hosted at https://grafana.com/grafana/dashboards/{id}
+      top-line:
+        gnetId: 15474
+        revision: 4
+        datasource: prometheus
+      health:
+        gnetId: 15486
+        revision: 3
+        datasource: prometheus
+      kubernetes:
+        gnetId: 15479
+        revision: 2
+        datasource: prometheus
+      namespace:
+        gnetId: 15478
+        revision: 3
+        datasource: prometheus
+      deployment:
+        gnetId: 15475
+        revision: 6
+        datasource: prometheus
+      pod:
+        gnetId: 15477
+        revision: 3
+        datasource: prometheus
+      service:
+        gnetId: 15480
+        revision: 3
+        datasource: prometheus
+      route:
+        gnetId: 15481
+        revision: 3
+        datasource: prometheus
+      authority:
+        gnetId: 15482
+        revision: 3
+        datasource: prometheus
+      cronjob:
+        gnetId: 15483
+        revision: 3
+        datasource: prometheus
+      job:
+        gnetId: 15487
+        revision: 3
+        datasource: prometheus
+      daemonset:
+        gnetId: 15484
+        revision: 3
+        datasource: prometheus
+      replicaset:
+        gnetId: 15491
+        revision: 3
+        datasource: prometheus
+      statefulset:
+        gnetId: 15493
+        revision: 3
+        datasource: prometheus
+      replicationcontroller:
+        gnetId: 15492
+        revision: 4
+        datasource: prometheus
+      prometheus:
+        gnetId: 15489
+        revision: 2
+        datasource: prometheus
+      prometheus-benchmark:
+        gnetId: 15490
+        revision: 2
+        datasource: prometheus
+      multicluster:
+        gnetId: 15488
+        revision: 3
+        datasource: prometheus

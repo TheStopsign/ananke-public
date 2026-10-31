@@ -1,0 +1,10 @@
+apiVersion: v2
+name: ananke-kyverno
+description: Helm chart for Kyverno
+type: application
+version: 1.0.0
+appVersion: "1.0"
+dependencies:
+  - name: kyverno
+    version: 2.6.0
+    repository: https://kyverno.github.io/kyverno

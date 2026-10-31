@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: linkerd-viz
+  namespace: argocd
+spec:
+  project: ananke
+  source:
+    chart: linkerd-viz
+    repoURL: https://helm.linkerd.io/stable
+    targetRevision: v30.3.6
+    helm:
+      parameters:
+        - name: grafana.url
+          value: "grafana.grafana:3000"
+  destination:
+    namespace: linkerd-viz
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      allowEmpty: true
+      selfHeal: true
+    managedNamespaceMetadata:
+      annotations: # The annotations to set on the application namespace
+        linkerd.io/inject: enabled
+    syncOptions:
+      - CreateNamespace=true

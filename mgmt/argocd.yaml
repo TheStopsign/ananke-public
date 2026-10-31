@@ -1,0 +1,67 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ananke-deploy-secret
+  namespace: argocd
+type: Opaque
+data:
+  privateKey: ~REDACTED~
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  repositories: |
+    - url: git@github.com:TheStopsign/ananke
+      sshPrivateKeySecret:
+        name: ananke-deploy-secret
+        key: privateKey
+  resource.customizations.ignoreDifferences.rbac.authorization.k8s.io_ClusterRole:
+    |
+    jsonPointers:
+      - /rules
+    jqPathExpressions:
+      - .rules[]
+    managedFieldsManagers:
+      - clusterrole-aggregation-controller
+  resource.customizations.health.cluster.x-k8s.io_Cluster: |
+    hs = {}
+    if obj.status ~= nil then
+      if obj.status.conditions ~= nil then
+        for i, condition in ipairs(obj.status.conditions) do
+          if condition.type == "Ready" and condition.status == "False" then
+            hs.status = "Degraded"
+            hs.message = condition.message
+            return hs
+          end
+          if condition.type == "Ready" and condition.status == "True" then
+            hs.status = "Healthy"
+            hs.message = condition.message
+            return hs
+          end
+        end
+      end
+    end
+
+    hs.status = "Progressing"
+    hs.message = "Waiting for certificate"
+    return hs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-argocd-contoller
+subjects:
+  - kind: ServiceAccount
+    name: argocd-application-controller
+    namespace: argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin

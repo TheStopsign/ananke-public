@@ -1,0 +1,7 @@
+*.crt
+*.key
+tmp
+tmp/*
+ananke-linkerd-bootstrap
+ananke-linkerd-bootstrap/*
+trust_anchor.pem

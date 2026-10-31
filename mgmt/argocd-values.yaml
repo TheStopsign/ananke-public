@@ -1,0 +1,4 @@
+configs:
+  params:
+    server.insecure: true
+    otlp.address: collector.linkerd-jaeger:4317

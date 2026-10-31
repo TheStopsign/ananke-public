@@ -1,0 +1,50 @@
+---
+apiVersion: getambassador.io/v3alpha1
+kind: Mapping
+metadata:
+  name: public-health-check
+  namespace: ambassador
+spec:
+  hostname: "*"
+  prefix: /-/ambassador/ready
+  rewrite: /ambassador/v0/check_ready
+  service: localhost:8877
+  bypass_auth: true
+---
+apiVersion: getambassador.io/v2
+kind: Mapping
+metadata:
+  name: dashboard-mapping
+spec:
+  host: "dashboard.ananke.com"
+  prefix: /
+  host_rewrite: web.linkerd-viz.svc.cluster.local:8084
+  service: web.linkerd-viz.svc.cluster.local:8084
+  allow_upgrade:
+    - websocket
+---
+apiVersion: getambassador.io/v2
+kind: Mapping
+metadata:
+  name: argocd-server-ui
+  namespace: argocd
+spec:
+  host: argocd.ananke.com
+  prefix: /
+  service: argocd-server:443
+  timeout_ms: 30000
+---
+apiVersion: getambassador.io/v2
+kind: Mapping
+metadata:
+  name: argocd-server-cli
+  namespace: argocd
+spec:
+  # NOTE: the port must be ignored if you have strip_matching_host_port enabled on envoy
+  host: argocd.ananke.com:443
+  prefix: /
+  service: argocd-server:80
+  regex_headers:
+    Content-Type: "^application/grpc.*$"
+  grpc: true
+  timeout_ms: 30000

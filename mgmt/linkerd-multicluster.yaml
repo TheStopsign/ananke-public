@@ -1,0 +1,26 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: linkerd-multicluster
+  namespace: argocd
+spec:
+  destination:
+    name: ""
+    namespace: "linkerd-multicluster"
+    server: "https://kubernetes.default.svc"
+  source:
+    path: mgmt/linkerd-multicluster
+    repoURL: "git@github.com:TheStopsign/ananke"
+    targetRevision: HEAD
+    helm:
+      valueFiles:
+        - linkerd-mc-values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      allowEmpty: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: default

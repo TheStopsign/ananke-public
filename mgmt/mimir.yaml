@@ -1,0 +1,4 @@
+minio:
+  makeBucketJob:
+    podAnnotations:
+      linkerd.io/inject: "disabled"

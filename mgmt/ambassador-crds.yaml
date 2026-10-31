@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ambassador-crds
+  namespace: argocd
+spec:
+  destination:
+    name: ""
+    namespace: "emissary-system"
+    server: "https://kubernetes.default.svc"
+  source:
+    path: mgmt/ambassador-crds
+    repoURL: "git@github.com:TheStopsign/ananke"
+    targetRevision: HEAD
+    helm:
+  syncPolicy:
+    automated:
+      prune: true
+      allowEmpty: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: default

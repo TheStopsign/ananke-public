@@ -1,0 +1,10 @@
+apiVersion: v2
+name: ananke-ambassador
+description: Helm chart for Ambassador
+type: application
+version: 1.0.0
+appVersion: "1.0"
+dependencies:
+  - name: edge-stack
+    version: 8.x.x
+    repository: https://app.getambassador.io

@@ -1,0 +1,19 @@
+emissary-ingress:
+  service:
+    annotations:
+      mirror.linkerd.io/gateway-identity: ambassador.ambassador.serviceaccount.identity.linkerd.cluster.local
+      mirror.linkerd.io/multicluster-gateway: "true"
+      mirror.linkerd.io/probe-path: -/ambassador/ready
+      mirror.linkerd.io/probe-period: "3"
+    type: LoadBalancer
+    ports:
+      - name: mc-probe
+        port: 80
+        targetPort: 8080
+      - name: https
+        port: 443
+        targetPort: 8443
+      - name: mc-gateway
+        port: 4143
+  podAnnotations:
+    config.linkerd.io/enable-gateway: "true"
